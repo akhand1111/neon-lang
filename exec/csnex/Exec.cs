@@ -11,27 +11,32 @@ namespace csnex
         {
             exit_code = 0;
             stack = new Stack<Cell>();
+            Callstack = new Stack<int>();
             global = new Global(this);
             bytecode = bc;
+            ParamRecursionLimit = 2000; // ToDo: Add runtime$setRecursionLimit()
         }
 
         private int exit_code;
         private readonly Bytecode bytecode;
         public Stack<Cell> stack;
+        private Stack<int> Callstack;
         public bool enable_assert;
         private int ip;
         private Global global;
+        private Int32 ParamRecursionLimit;
 
         public int Run(bool EnableAssertions)
         {
-            ip = 0;
+            ip = bytecode.code.Length;
+            Invoke(0);
 
             for (int g = 0; g < bytecode.globals.Capacity; g++)
             {
                 bytecode.globals.Add(new Cell(Cell.Type.None));
             }
 
-            exit_code = Loop();
+            exit_code = Loop(0);
 
             if (exit_code == 0) {
                 Debug.Assert(stack.Count == 0);
@@ -524,7 +529,12 @@ namespace csnex
 
         void CALLF()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            int val = Bytecode.Get_VInt(bytecode.code, ref ip);
+            if (Callstack.Count >= ParamRecursionLimit) {
+                throw new NeonStackOverflowException("StackOverflowException");
+            }
+            Invoke(val);
         }
 
         void CALLMF()
@@ -604,7 +614,7 @@ namespace csnex
 
         void RET()
         {
-            ip++;
+            ip = Callstack.Pop();
         }
 #endregion
 #region Stack Handler Opcodes
@@ -680,9 +690,15 @@ namespace csnex
 #endregion
 #endregion
 
-        private int Loop()
+        private void Invoke(int index)
         {
-            while (ip < bytecode.code.Length && exit_code == 0) {
+            Callstack.Push(ip);
+            ip = bytecode.functions[index].entry;
+        }
+
+        private int Loop(Int64 min_callstack_depth)
+        {
+            while (Callstack.Count > min_callstack_depth && ip < bytecode.code.Length && exit_code == 0) {
                 switch ((Opcode)bytecode.code[ip]) {
                     case Opcode.PUSHB: PUSHB(); break;                // push boolean immediate
                     case Opcode.PUSHN: PUSHN(); break;                // push number immediate
