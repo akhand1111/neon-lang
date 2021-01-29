@@ -7,30 +7,45 @@ jobs:
           env: BUILDER=scons RELEASE=0 WITH_SUBMODULES=0
         - os: linux
           compiler: gcc
+          arch: arm64-graviton2
+          virt: lxd
+          group: edge
+          env: BUILDER=scons RELEASE=0 WITH_SUBMODULES=0
+        - os: linux
+          compiler: gcc
+          env: BUILDER=cmake WITH_SUBMODULES=0
+        - os: linux
+          arch: arm64-graviton2
+          virt: lxd
+          group: edge
+          compiler: gcc
           env: BUILDER=cmake WITH_SUBMODULES=0
         - os: linux
           compiler: clang
+          env: BUILDER=cmake WITH_SUBMODULES=0
+        - os: linux
+          compiler: clang
+          arch: arm64-graviton2
+          virt: lxd
+          group: edge
           env: BUILDER=cmake WITH_SUBMODULES=0
         - os: linux
           compiler: clang
           # Submodules currently only build with scons.
           env: BUILDER=scons RELEASE=0 WITH_SUBMODULES=1
         - os: linux
+          arch: arm64-graviton2
+          virt: lxd
+          group: edge
           compiler: clang
-          arch: arm64
-          env: BUILDER=cmake WITH_SUBMODULES=0
+          # Submodules currently only build with scons.
+          env: BUILDER=scons RELEASE=0 WITH_SUBMODULES=1
         # Currently resid does not build on arm.
         #- os: linux
         #  compiler: clang
         #  arch: arm64
         #  # Submodules currently only build with scons.
         #  env: BUILDER=scons RELEASE=0 WITH_SUBMODULES=1 BID_GENERIC=1
-        - os: osx
-          compiler: clang
-          env: BUILDER=cmake WITH_SUBMODULES=0
-        - os: osx
-          compiler: clang
-          env: BUILDER=cmake WITH_SUBMODULES=1
 git:
   submodules: false
 before_install:
